@@ -18,6 +18,9 @@ public class CodeReview {
     @Column(columnDefinition = "TEXT")
     private String feedback;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     public Long getId() {
         return id;
@@ -35,6 +38,9 @@ public class CodeReview {
         return feedback;
     }
 
+    public User getUser() {
+        return user;
+    }
 
     public void setLanguage(String language) {
         this.language = language;
@@ -46,5 +52,9 @@ public class CodeReview {
 
     public void setFeedback(String feedback) {
         this.feedback = feedback;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
