@@ -1,9 +1,11 @@
 package com.deeksha.codereview.controller;
 
 import com.deeksha.codereview.dto.LoginRequest;
+import com.deeksha.codereview.dto.LoginResponse;
 import com.deeksha.codereview.dto.RegisterRequest;
 import com.deeksha.codereview.dto.UserResponse;
 import com.deeksha.codereview.entity.User;
+import com.deeksha.codereview.service.JwtService;
 import com.deeksha.codereview.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,8 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtService jwtService;
 
     @PostMapping("/register")
     public UserResponse register(@RequestBody RegisterRequest request) {
@@ -36,7 +40,6 @@ public class AuthController {
         );
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
@@ -51,12 +54,12 @@ public class AuthController {
                     .body("Invalid credentials");
         }
 
+        String token = jwtService.generateToken(
+                user.getEmail()
+        );
+
         return ResponseEntity.ok(
-                new UserResponse(
-                        user.getId(),
-                        user.getName(),
-                        user.getEmail()
-                )
+                new LoginResponse(token)
         );
     }
 }

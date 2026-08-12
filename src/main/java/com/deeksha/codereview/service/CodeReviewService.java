@@ -1,4 +1,7 @@
+
 package com.deeksha.codereview.service;
+
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.deeksha.codereview.entity.CodeReview;
 import com.deeksha.codereview.entity.User;
@@ -25,47 +28,100 @@ public class CodeReviewService {
 
     public CodeReview submitReview(CodeReview codeReview) {
 
-        // JWT TEMPORARILY DISABLED
-        // Use the first registered user for the review.
+    String email = SecurityContextHolder
+            .getContext()
+            .getAuthentication()
+            .getName();
 
-        User user = userRepository.findAll()
-                .stream()
-                .findFirst()
-                .orElseThrow(() ->
-                        new RuntimeException("No user found in database"));
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new RuntimeException("User not found"));
 
-        codeReview.setUser(user);
+    codeReview.setUser(user);
 
-        String feedback =
-                codeAnalyzerService.analyze(codeReview.getCode());
+    String feedback =
+            codeAnalyzerService.analyze(codeReview.getCode());
 
-        codeReview.setFeedback(feedback);
+    codeReview.setFeedback(feedback);
 
-        return codeReviewRepository.save(codeReview);
-    }
+    return codeReviewRepository.save(codeReview);
+}
 
 
     public List<CodeReview> getAllReviews() {
 
-        return codeReviewRepository.findAll();
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return codeReviewRepository.findByUser(user);
     }
 
 
     public CodeReview getReviewById(Long id) {
 
-        return codeReviewRepository.findById(id)
-                .orElse(null);
+    String email = SecurityContextHolder
+            .getContext()
+            .getAuthentication()
+            .getName();
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    CodeReview review = codeReviewRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Review not found"));
+
+    if (!review.getUser().getId().equals(user.getId())) {
+        throw new RuntimeException("You are not authorized to access this review");
     }
+
+    return review;
+}
 
 
     public void deleteReview(Long id) {
 
-        codeReviewRepository.deleteById(id);
+    String email = SecurityContextHolder
+            .getContext()
+            .getAuthentication()
+            .getName();
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    CodeReview review = codeReviewRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Review not found"));
+
+    if (!review.getUser().getId().equals(user.getId())) {
+        throw new RuntimeException("You are not authorized to delete this review");
     }
+
+    codeReviewRepository.deleteById(id);
+}
+
+
     public CodeReview updateReview(Long id, CodeReview updatedReview) {
 
     CodeReview existingReview = codeReviewRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Review not found"));
+
+    String email = SecurityContextHolder
+            .getContext()
+            .getAuthentication()
+            .getName();
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+            System.out.println("UPDATE REQUEST USER: " + email);
+System.out.println("REVIEW OWNER: " + existingReview.getUser().getEmail());
+
+    if (!existingReview.getUser().getId().equals(user.getId())) {
+        throw new RuntimeException("You are not authorized to update this review");
+    }
 
     existingReview.setLanguage(updatedReview.getLanguage());
     existingReview.setCode(updatedReview.getCode());
