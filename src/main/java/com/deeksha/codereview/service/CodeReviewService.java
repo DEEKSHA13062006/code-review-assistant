@@ -76,7 +76,7 @@ public class CodeReviewService {
             .orElseThrow(() -> new RuntimeException("Review not found"));
 
     if (!review.getUser().getId().equals(user.getId())) {
-        throw new RuntimeException("You are not allowed to access this review");
+        throw new RuntimeException("You are not authorized to access this review");
     }
 
     return review;
@@ -85,23 +85,50 @@ public class CodeReviewService {
 
     public void deleteReview(Long id) {
 
-        codeReviewRepository.deleteById(id);
+    String email = SecurityContextHolder
+            .getContext()
+            .getAuthentication()
+            .getName();
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    CodeReview review = codeReviewRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Review not found"));
+
+    if (!review.getUser().getId().equals(user.getId())) {
+        throw new RuntimeException("You are not authorized to delete this review");
     }
+
+    codeReviewRepository.deleteById(id);
+}
 
 
     public CodeReview updateReview(Long id, CodeReview updatedReview) {
 
-        CodeReview existingReview = codeReviewRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+    CodeReview existingReview = codeReviewRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Review not found"));
 
-        existingReview.setLanguage(updatedReview.getLanguage());
-        existingReview.setCode(updatedReview.getCode());
+    String email = SecurityContextHolder
+            .getContext()
+            .getAuthentication()
+            .getName();
 
-        String feedback =
-                codeAnalyzerService.analyze(updatedReview.getCode());
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+            System.out.println("UPDATE REQUEST USER: " + email);
+System.out.println("REVIEW OWNER: " + existingReview.getUser().getEmail());
 
-        existingReview.setFeedback(feedback);
-
-        return codeReviewRepository.save(existingReview);
+    if (!existingReview.getUser().getId().equals(user.getId())) {
+        throw new RuntimeException("You are not authorized to update this review");
     }
+
+    existingReview.setLanguage(updatedReview.getLanguage());
+    existingReview.setCode(updatedReview.getCode());
+
+    String feedback = codeAnalyzerService.analyze(updatedReview.getCode());
+    existingReview.setFeedback(feedback);
+
+    return codeReviewRepository.save(existingReview);
+}
 }
