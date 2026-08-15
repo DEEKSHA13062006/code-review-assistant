@@ -2,12 +2,12 @@
 package com.deeksha.codereview.service;
 
 import org.springframework.security.core.context.SecurityContextHolder;
-
+import com.deeksha.codereview.exception.ForbiddenException;
 import com.deeksha.codereview.entity.CodeReview;
 import com.deeksha.codereview.entity.User;
 import com.deeksha.codereview.repository.CodeReviewRepository;
 import com.deeksha.codereview.repository.UserRepository;
-
+import com.deeksha.codereview.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,8 +34,7 @@ public class CodeReviewService {
             .getName();
 
     User user = userRepository.findByEmail(email)
-            .orElseThrow(() ->
-                    new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
     codeReview.setUser(user);
 
@@ -56,7 +55,7 @@ public class CodeReviewService {
                 .getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return codeReviewRepository.findByUser(user);
     }
@@ -70,13 +69,13 @@ public class CodeReviewService {
             .getName();
 
     User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
     CodeReview review = codeReviewRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Review not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
     if (!review.getUser().getId().equals(user.getId())) {
-        throw new RuntimeException("You are not authorized to access this review");
+        throw new ForbiddenException("You are not authorized to access this review");
     }
 
     return review;
@@ -91,13 +90,13 @@ public class CodeReviewService {
             .getName();
 
     User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
     CodeReview review = codeReviewRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Review not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
     if (!review.getUser().getId().equals(user.getId())) {
-        throw new RuntimeException("You are not authorized to delete this review");
+        throw new ForbiddenException("You are not authorized to delete this review");
     }
 
     codeReviewRepository.deleteById(id);
@@ -107,7 +106,7 @@ public class CodeReviewService {
     public CodeReview updateReview(Long id, CodeReview updatedReview) {
 
     CodeReview existingReview = codeReviewRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Review not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
     String email = SecurityContextHolder
             .getContext()
@@ -115,12 +114,12 @@ public class CodeReviewService {
             .getName();
 
     User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             System.out.println("UPDATE REQUEST USER: " + email);
 System.out.println("REVIEW OWNER: " + existingReview.getUser().getEmail());
 
     if (!existingReview.getUser().getId().equals(user.getId())) {
-        throw new RuntimeException("You are not authorized to update this review");
+        throw new ForbiddenException("You are not authorized to update this review");
     }
 
     existingReview.setLanguage(updatedReview.getLanguage());
