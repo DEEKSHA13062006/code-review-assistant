@@ -1,4 +1,3 @@
-
 package com.deeksha.codereview.config;
 
 import com.deeksha.codereview.filter.JwtAuthenticationFilter;
@@ -37,8 +36,24 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+
+                // Authentication endpoints
+                .requestMatchers(
+                    "/api/auth/register",
+                    "/api/auth/login"
+                ).permitAll()
+
+                // Swagger / OpenAPI endpoints
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**"
+                ).permitAll()
+
+                // Review endpoints require JWT authentication
                 .requestMatchers("/api/review/**").authenticated()
+
+                // Everything else
                 .anyRequest().permitAll()
             )
 
@@ -72,4 +87,3 @@ public class SecurityConfig {
         return source;
     }
 }
-
