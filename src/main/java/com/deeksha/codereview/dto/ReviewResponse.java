@@ -1,3 +1,4 @@
+
 package com.deeksha.codereview.dto;
 
 public class ReviewResponse {
@@ -7,7 +8,12 @@ public class ReviewResponse {
     private String code;
     private String feedback;
 
-    public ReviewResponse(Long id, String language, String code, String feedback) {
+    public ReviewResponse(
+            Long id,
+            String language,
+            String code,
+            String feedback) {
+
         this.id = id;
         this.language = language;
         this.code = code;
